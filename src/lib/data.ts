@@ -6,7 +6,7 @@ let devices: Device[] = [
     manufacturer: 'Pixelate Inc.',
     model: 'Quantum 5',
     manufacturingDate: '2023-01-15',
-    owner: '0xOwner',
+    owner: '0x0526a52994e43f1E84a569f4Bfc2622A5f4F89B5', // Example real address
     status: 'active',
     imageUrl: 'https://picsum.photos/seed/smartphone/600/400',
     imageHint: 'smartphone',
@@ -26,7 +26,7 @@ let devices: Device[] = [
     manufacturer: 'Pixelate Inc.',
     model: 'Quantum Pad',
     manufacturingDate: '2023-03-10',
-    owner: '0xOwner',
+    owner: '0x0526a52994e43f1E84a569f4Bfc2622A5f4F89B5', // Example real address
     status: 'recycled',
     imageUrl: 'https://picsum.photos/seed/tablet/600/400',
     imageHint: 'tablet device',
@@ -63,7 +63,7 @@ let lifecycleEvents: LifecycleEvent[] = [
     timestamp: '2023-06-05T18:00:00Z',
     details: {
       from: '0xFirstBuyer',
-      to: '0xOwner',
+      to: '0x0526a52994e43f1E84a569f4Bfc2622A5f4F89B5',
     },
   },
   {
@@ -120,7 +120,7 @@ let lifecycleEvents: LifecycleEvent[] = [
     timestamp: '2023-03-15T16:45:00Z',
     details: {
       from: 'Pixelate Inc.',
-      to: '0xOwner',
+      to: '0x0526a52994e43f1E84a569f4Bfc2622A5f4F89B5',
     },
   },
   {
@@ -148,7 +148,7 @@ export async function getDeviceById(id: string): Promise<Device | undefined> {
 }
 
 export async function getDevicesByOwner(owner: string): Promise<Device[]> {
-  return devices.filter((device) => device.owner === owner);
+  return devices.filter((device) => device.owner.toLowerCase() === owner.toLowerCase());
 }
 
 export async function getDeviceLifecycle(deviceId: string): Promise<LifecycleEvent[]> {

@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
+import { Web3Provider } from '@/context/web3-provider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -22,12 +23,14 @@ export default function RootLayout({
       <body
         className={`${inter.variable} font-body antialiased flex flex-col min-h-screen`}
       >
-        <Header />
-        <main className="flex-grow container mx-auto px-4 py-8">
-          {children}
-        </main>
-        <Footer />
-        <Toaster />
+        <Web3Provider>
+          <Header />
+          <main className="flex-grow container mx-auto px-4 py-8">
+            {children}
+          </main>
+          <Footer />
+          <Toaster />
+        </Web3Provider>
       </body>
     </html>
   );

@@ -4,7 +4,6 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { addDevice, addLifecycleEvent, getDeviceById, updateDevice } from './data';
 import type { CreationEventDetails, Device, LifecycleEvent, RepairEventDetails, TransferEventDetails } from './definitions';
-import { MOCK_USER_WALLET } from './definitions';
 
 export async function searchDevice(formData: FormData) {
   const serialNumber = formData.get('serialNumber') as string;
@@ -23,6 +22,11 @@ export async function registerDevice(prevState: { error: string }, formData: For
   const manufacturer = formData.get('manufacturer') as string;
   const model = formData.get('model') as string;
   const manufacturingDate = formData.get('manufacturingDate') as string;
+  const owner = formData.get('owner') as string;
+
+  if (!owner) {
+    return { error: 'Wallet not connected. Please connect your wallet to register a device.' };
+  }
 
   const existingDevice = await getDeviceById(serialNumber);
   if (existingDevice) {
@@ -34,7 +38,7 @@ export async function registerDevice(prevState: { error: string }, formData: For
     manufacturer,
     model,
     manufacturingDate,
-    owner: MOCK_USER_WALLET,
+    owner,
     status: 'active',
     imageUrl: `https://picsum.photos/seed/${serialNumber}/600/400`,
     imageHint: 'device',
@@ -62,13 +66,14 @@ export async function registerDevice(prevState: { error: string }, formData: For
 export async function transferOwnership(formData: FormData) {
   const deviceId = formData.get('deviceId') as string;
   const newOwner = formData.get('newOwner') as string;
+  const currentOwner = formData.get('currentOwner') as string;
 
   const device = await getDeviceById(deviceId);
   if (!device) {
     return { error: 'Device not found.' };
   }
   
-  if (device.owner !== MOCK_USER_WALLET) {
+  if (device.owner.toLowerCase() !== currentOwner.toLowerCase()) {
     return { error: 'Only the current owner can transfer the device.' };
   }
 

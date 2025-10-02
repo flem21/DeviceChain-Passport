@@ -39,4 +39,5 @@ export type LifecycleEvent = {
   details: CreationEventDetails | TransferEventDetails | RepairEventDetails | RecyclingEventDetails;
 };
 
-export const MOCK_USER_WALLET = '0xOwner';
+// This is no longer the primary source of truth
+export const MOCK_USER_WALLET = '0x0526a52994e43f1E84a569f4Bfc2622A5f4F89B5';

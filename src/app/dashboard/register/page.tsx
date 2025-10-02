@@ -14,8 +14,12 @@ import { Label } from '@/components/ui/label';
 import { registerDevice } from '@/lib/actions';
 import { FilePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useWeb3 } from '@/context/web3-provider';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Wallet } from 'lucide-react';
 
 export default function RegisterDevicePage() {
+  const { account, connectWallet } = useWeb3();
   const initialState = { error: '' };
   const [state, dispatch] = useActionState(registerDevice, initialState);
   const { toast } = useToast();
@@ -23,15 +27,25 @@ export default function RegisterDevicePage() {
   useEffect(() => {
     if (state?.error) {
       toast({
-        variant: "destructive",
-        title: "Registration Failed",
+        variant: 'destructive',
+        title: 'Registration Failed',
         description: state.error,
-      })
+      });
     }
   }, [state, toast]);
 
   return (
     <div className="max-w-2xl mx-auto animate-fade-in-up">
+       {!account && (
+        <Alert className="mb-6">
+          <Wallet className="h-4 w-4" />
+          <AlertTitle>Wallet Not Connected</AlertTitle>
+          <AlertDescription>
+            Please connect your wallet to register a new device.
+             <Button onClick={connectWallet} variant="link" className="p-0 h-auto ml-1">Connect Wallet</Button>
+          </AlertDescription>
+        </Alert>
+      )}
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -45,6 +59,7 @@ export default function RegisterDevicePage() {
         </CardHeader>
         <CardContent>
           <form action={dispatch} className="space-y-6">
+            <input type="hidden" name="owner" value={account || ''} />
             <div className="space-y-2">
               <Label htmlFor="serialNumber">Serial Number</Label>
               <Input
@@ -76,7 +91,7 @@ export default function RegisterDevicePage() {
               <Label htmlFor="manufacturingDate">Manufacturing Date</Label>
               <Input id="manufacturingDate" name="manufacturingDate" type="date" required />
             </div>
-            <Button type="submit" className="w-full" variant="default">
+            <Button type="submit" className="w-full" variant="default" disabled={!account}>
               Create Passport
             </Button>
           </form>

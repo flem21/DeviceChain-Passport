@@ -1,26 +1,58 @@
+'use client';
+import { useEffect, useState } from 'react';
 import Timeline from '@/components/timeline';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { getDeviceById, getDeviceLifecycle } from '@/lib/data';
-import { MOCK_USER_WALLET } from '@/lib/definitions';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRightLeft, CheckCircle, Info, KeyRound, Recycle, Wrench, XCircle } from 'lucide-react';
+import { ArrowRightLeft, KeyRound, Recycle, Wrench } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { useWeb3 } from '@/context/web3-provider';
+import { Device, LifecycleEvent } from '@/lib/definitions';
+import { Info } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
 
-export default async function DevicePassportPage({ params }: { params: { id: string } }) {
-  const device = await getDeviceById(params.id);
-  const lifecycle = await getDeviceLifecycle(params.id);
+export default function DevicePassportPage({ params }: { params: { id: string } }) {
+  const { account } = useWeb3();
+  const [device, setDevice] = useState<Device | null>(null);
+  const [lifecycle, setLifecycle] = useState<LifecycleEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  useEffect(() => {
+    async function fetchData() {
+        try {
+            const deviceData = await getDeviceById(params.id);
+            if (!deviceData) {
+                notFound();
+                return;
+            }
+            const lifecycleData = await getDeviceLifecycle(params.id);
+            setDevice(deviceData);
+            setLifecycle(lifecycleData);
+        } catch (error) {
+            console.error("Failed to fetch device data", error);
+            // Handle error appropriately
+        } finally {
+            setIsLoading(false);
+        }
+    }
+    fetchData();
+  }, [params.id]);
+
+  if (isLoading) {
+    return <div>Loading device passport...</div>; // Or a proper skeleton loader
+  }
+  
   if (!device) {
-    notFound();
+    // notFound() must be called in a server component or during build.
+    // We can redirect or show a not found component here.
+    return <div>Device not found.</div>
   }
 
-  const isOwner = device.owner === MOCK_USER_WALLET;
+  const isOwner = account && device.owner.toLowerCase() === account.toLowerCase();
   const isRecycled = device.status === 'recycled';
 
   return (
