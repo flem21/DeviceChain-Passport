@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -14,11 +14,10 @@ import { Label } from '@/components/ui/label';
 import { registerDevice } from '@/lib/actions';
 import { FilePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect } from 'react';
 
 export default function RegisterDevicePage() {
   const initialState = { error: '' };
-  const [state, dispatch] = useFormState(registerDevice, initialState);
+  const [state, dispatch] = useActionState(registerDevice, initialState);
   const { toast } = useToast();
 
   useEffect(() => {
