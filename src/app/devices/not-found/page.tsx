@@ -23,12 +23,12 @@ export default function DeviceNotFound() {
                     <span className="font-bold font-mono text-foreground break-all mx-1">
                         {id || 'N/A'}
                     </span>
-                     could not be found.
+                     could not be found on the blockchain.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 <p className="text-muted-foreground">
-                    Please check the serial number and try again. If you believe this is an error, contact the device manufacturer.
+                    Please check the serial number and try again. The device may not be registered yet.
                 </p>
                 <Button asChild>
                     <Link href="/">Return to Search</Link>

@@ -10,8 +10,8 @@ import { HardDrive, PlusCircle, ArrowRight, Wallet } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useWeb3 } from '@/context/web3-provider';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getContract } from '@/lib/contract';
 
 function DeviceSkeleton() {
     return (
@@ -32,15 +32,16 @@ function DeviceSkeleton() {
 }
 
 export default function DashboardPage() {
-  const { account, connectWallet } = useWeb3();
+  const { web3, account, connectWallet } = useWeb3();
   const [devices, setDevices] = useState<Device[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchDevices() {
-      if (account) {
+      if (web3 && account) {
         setIsLoading(true);
-        const userDevices = await getDevicesByOwner(account);
+        const contract = getContract(web3);
+        const userDevices = await getDevicesByOwner(contract, account);
         setDevices(userDevices);
         setIsLoading(false);
       } else {
@@ -49,7 +50,7 @@ export default function DashboardPage() {
       }
     }
     fetchDevices();
-  }, [account]);
+  }, [web3, account]);
 
   if (!account) {
     return (

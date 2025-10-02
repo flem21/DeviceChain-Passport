@@ -1,173 +1,135 @@
+import type { Contract } from 'web3-eth-contract';
 import type { Device, LifecycleEvent } from './definitions';
+import { MOCK_LIFECYCLE_EVENTS, MOCK_USER_WALLET_ADDRESS } from './contract';
 
-let devices: Device[] = [
-  {
-    id: 'SN-A1B2C3D4E5',
-    manufacturer: 'Pixelate Inc.',
-    model: 'Quantum 5',
-    manufacturingDate: '2023-01-15',
-    owner: '0x0526a52994e43f1E84a569f4Bfc2622A5f4F89B5', // Example real address
-    status: 'active',
-    imageUrl: 'https://picsum.photos/seed/smartphone/600/400',
-    imageHint: 'smartphone',
-  },
-  {
-    id: 'SN-X9Y8Z7W6V5',
-    manufacturer: 'ConnectaCorp',
-    model: 'NexusBook Pro',
-    manufacturingDate: '2022-11-20',
-    owner: '0xAnotherUser',
-    status: 'active',
-    imageUrl: 'https://picsum.photos/seed/laptop/600/400',
-    imageHint: 'laptop',
-  },
-  {
-    id: 'SN-R4S5T6U7V8',
-    manufacturer: 'Pixelate Inc.',
-    model: 'Quantum Pad',
-    manufacturingDate: '2023-03-10',
-    owner: '0x0526a52994e43f1E84a569f4Bfc2622A5f4F89B5', // Example real address
-    status: 'recycled',
-    imageUrl: 'https://picsum.photos/seed/tablet/600/400',
-    imageHint: 'tablet device',
-  },
-];
+// --- Helper Functions to format data from contract ---
 
-let lifecycleEvents: LifecycleEvent[] = [
-  // Device 1 Lifecycle
-  {
-    id: 'evt-1',
-    deviceId: 'SN-A1B2C3D4E5',
-    type: 'creation',
-    timestamp: '2023-01-15T10:00:00Z',
-    details: {
-      manufacturer: 'Pixelate Inc.',
-      model: 'Quantum 5',
-      manufacturingDate: '2023-01-15',
-    },
-  },
-  {
-    id: 'evt-2',
-    deviceId: 'SN-A1B2C3D4E5',
-    type: 'transfer',
-    timestamp: '2023-01-20T14:30:00Z',
-    details: {
-      from: 'Pixelate Inc.',
-      to: '0xFirstBuyer',
-    },
-  },
-  {
-    id: 'evt-3',
-    deviceId: 'SN-A1B2C3D4E5',
-    type: 'transfer',
-    timestamp: '2023-06-05T18:00:00Z',
-    details: {
-      from: '0xFirstBuyer',
-      to: '0x0526a52994e43f1E84a569f4Bfc2622A5f4F89B5',
-    },
-  },
-  {
-    id: 'evt-4',
-    deviceId: 'SN-A1B2C3D4E5',
-    type: 'repair',
-    timestamp: '2024-02-10T09:15:00Z',
-    details: {
-      serviceProvider: 'GadgetSavers',
-      description: 'Screen replacement due to drop damage.',
-      replacedParts: ['OLED Display Panel'],
-    },
-  },
+function formatDeviceFromContract(contractData: any): Device {
+  const statusNumber = Number(contractData.status); // Convert BigInt to Number
+  let status: 'active' | 'recycled' = 'active';
+  if (statusNumber === 1) {
+    status = 'recycled';
+  }
 
-  // Device 2 Lifecycle
-  {
-    id: 'evt-5',
-    deviceId: 'SN-X9Y8Z7W6V5',
-    type: 'creation',
-    timestamp: '2022-11-20T08:00:00Z',
-    details: {
-      manufacturer: 'ConnectaCorp',
-      model: 'NexusBook Pro',
-      manufacturingDate: '2022-11-20',
-    },
-  },
-  {
-    id: 'evt-6',
-    deviceId: 'SN-X9Y8Z7W6V5',
-    type: 'transfer',
-    timestamp: '2022-12-01T11:00:00Z',
-    details: {
-      from: 'ConnectaCorp',
-      to: '0xAnotherUser',
-    },
-  },
+  return {
+    id: contractData.id,
+    manufacturer: contractData.manufacturer,
+    model: contractData.model,
+    // Convert Unix timestamp (seconds) to ISO string
+    manufacturingDate: new Date(Number(contractData.manufacturingDate) * 1000).toISOString(),
+    owner: contractData.owner,
+    status: status,
+    imageUrl: `https://picsum.photos/seed/${contractData.id}/600/400`,
+    imageHint: 'device',
+  };
+}
 
-  // Device 3 Lifecycle
-  {
-    id: 'evt-7',
-    deviceId: 'SN-R4S5T6U7V8',
-    type: 'creation',
-    timestamp: '2023-03-10T12:00:00Z',
-    details: {
-      manufacturer: 'Pixelate Inc.',
-      model: 'Quantum Pad',
-      manufacturingDate: '2023-03-10',
-    },
-  },
-  {
-    id: 'evt-8',
-    deviceId: 'SN-R4S5T6U7V8',
-    type: 'transfer',
-    timestamp: '2023-03-15T16:45:00Z',
-    details: {
-      from: 'Pixelate Inc.',
-      to: '0x0526a52994e43f1E84a569f4Bfc2622A5f4F89B5',
-    },
-  },
-  {
-    id: 'evt-9',
-    deviceId: 'SN-R4S5T6U7V8',
-    type: 'recycling',
-    timestamp: '2024-05-20T13:00:00Z',
-    details: {
-      recycledBy: 'EcoTech Recycling',
-      notes: 'Device disposed of at an authorized recycling center.',
-    },
-  },
-];
+function formatLifecycleEventFromContract(contractEvent: any): LifecycleEvent {
+    const eventTypeMap: { [key: string]: LifecycleEvent['type'] } = {
+        "DeviceRegistered": 'creation',
+        "OwnershipTransferred": 'transfer',
+        "RepairLogged": 'repair',
+        "DeviceRecycled": 'recycling',
+    };
+
+    const eventType = eventTypeMap[contractEvent.event];
+    let details: any = {};
+
+    switch(eventType) {
+        case 'creation':
+            details = {
+                manufacturer: contractEvent.returnValues.manufacturer,
+                model: contractEvent.returnValues.model,
+            };
+            break;
+        case 'transfer':
+            details = {
+                from: contractEvent.returnValues.from,
+                to: contractEvent.returnValues.to,
+            };
+            break;
+        case 'repair':
+            details = {
+                serviceProvider: contractEvent.returnValues.serviceProvider,
+                description: contractEvent.returnValues.description,
+                replacedParts: contractEvent.returnValues.replacedParts || []
+            };
+            break;
+        case 'recycling':
+            details = {
+                recycledBy: contractEvent.returnValues.recycledBy,
+                notes: contractEvent.returnValues.notes || '',
+            };
+            break;
+    }
+
+    return {
+        id: contractEvent.transactionHash + contractEvent.logIndex,
+        deviceId: contractEvent.returnValues.deviceId,
+        type: eventType,
+        // Convert Unix timestamp (seconds) to ISO string
+        timestamp: new Date(Number(contractEvent.returnValues.timestamp) * 1000).toISOString(),
+        details,
+    }
+}
 
 
 // --- Data Access Functions ---
-// NOTE: These are in-memory and will reset on server restart.
+// These functions now interact with the smart contract.
 
-export async function getDevices(): Promise<Device[]> {
-  return devices;
+export async function getDeviceById(contract: Contract<any>, id: string): Promise<Device | undefined> {
+  try {
+    // Call the 'devices' mapping on the smart contract
+    const result = await contract.methods.devices(id).call();
+    if (result.id) { // Check if a device was actually returned
+        return formatDeviceFromContract(result);
+    }
+    return undefined;
+  } catch (error) {
+    console.error(`Error fetching device ${id}:`, error);
+    throw new Error('Could not fetch device from the blockchain.');
+  }
 }
 
-export async function getDeviceById(id: string): Promise<Device | undefined> {
-  return devices.find((device) => device.id === id);
+export async function getDevicesByOwner(contract: Contract<any>, owner: string): Promise<Device[]> {
+  try {
+     // This is a conceptual implementation. A real contract would need a way to
+     // query devices by owner, which can be complex.
+     // For now, we will use a mock return, assuming the contract could do this.
+    console.warn("getDevicesByOwner is using mock data. A real contract needs an efficient way to query by owner.");
+    
+    if (owner.toLowerCase() === MOCK_USER_WALLET_ADDRESS.toLowerCase()) {
+        const device1 = await getDeviceById(contract, 'SN-A1B2C3D4E5');
+        const device2 = await getDeviceById(contract, 'SN-R4S5T6U7V8');
+        return [device1, device2].filter(d => d !== undefined) as Device[];
+    }
+    
+    return [];
+
+  } catch (error) {
+    console.error(`Error fetching devices for owner ${owner}:`, error);
+    throw new Error('Could not fetch devices from the blockchain.');
+  }
 }
 
-export async function getDevicesByOwner(owner: string): Promise<Device[]> {
-  return devices.filter((device) => device.owner.toLowerCase() === owner.toLowerCase());
-}
+export async function getDeviceLifecycle(contract: Contract<any>, deviceId: string): Promise<LifecycleEvent[]> {
+  try {
+    // In a real DApp, you would query past events from the blockchain.
+    // Web3.js provides `contract.getPastEvents`.
+    // For this prototype, we'll return a mock history for recognized device IDs.
+    
+    console.warn("getDeviceLifecycle is using mock data. A real implementation would use contract.getPastEvents.");
 
-export async function getDeviceLifecycle(deviceId: string): Promise<LifecycleEvent[]> {
-  return lifecycleEvents
-    .filter((event) => event.deviceId === deviceId)
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-}
+    const MOCK_EVENTS = MOCK_LIFECYCLE_EVENTS;
 
-export async function addDevice(device: Device) {
-  devices.push(device);
-  return device;
-}
+    const filteredEvents = MOCK_EVENTS
+        .filter(event => event.returnValues.deviceId === deviceId)
+        .map(formatLifecycleEventFromContract);
+    
+    return filteredEvents.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-export async function addLifecycleEvent(event: LifecycleEvent) {
-  lifecycleEvents.push(event);
-  return event;
-}
-
-export async function updateDevice(id: string, updates: Partial<Device>) {
-  devices = devices.map(d => d.id === id ? { ...d, ...updates } : d);
-  return devices.find(d => d.id === id);
+  } catch (error) {
+    console.error(`Error fetching lifecycle for device ${deviceId}:`, error);
+    throw new Error('Could not fetch device lifecycle from the blockchain.');
+  }
 }

@@ -1,32 +1,65 @@
 'use client';
 
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { transferOwnership } from '@/lib/actions';
-import { ArrowRightLeft, Wallet } from 'lucide-react';
+import { transferOwnership } from '@/lib/contract';
+import { ArrowRightLeft, Wallet, Loader2 } from 'lucide-react';
 import { useWeb3 } from '@/context/web3-provider';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useActionState } from 'react';
-import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { getContract } from '@/lib/contract';
 
 export default function TransferPage({ params }: { params: { id: string } }) {
-  const { account, connectWallet } = useWeb3();
-  const initialState = { error: '' };
-  const [state, dispatch] = useActionState(transferOwnership, initialState);
+  const { web3, account, connectWallet } = useWeb3();
   const { toast } = useToast();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
-   useEffect(() => {
-    if (state?.error) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!web3 || !account) {
       toast({
-        variant: "destructive",
-        title: "Transfer Failed",
-        description: state.error,
-      })
+        variant: 'destructive',
+        title: 'Wallet not connected',
+        description: 'Please connect your wallet to transfer ownership.',
+      });
+      return;
     }
-  }, [state, toast]);
+    setIsLoading(true);
+
+    const formData = new FormData(event.currentTarget);
+    const newOwner = formData.get('newOwner') as string;
+
+    try {
+        const contract = getContract(web3);
+        await transferOwnership(contract, {
+            deviceId: params.id,
+            currentOwner: account,
+            newOwner,
+        });
+
+        toast({
+            title: 'Transfer Initiated',
+            description: 'Transaction sent to the network. Ownership will update upon confirmation.',
+        });
+
+        router.push(`/devices/${params.id}`);
+
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Transfer Failed",
+            description: error.message || "An unknown error occurred during the transfer.",
+        });
+    } finally {
+        setIsLoading(false);
+    }
+  }
+
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -48,13 +81,11 @@ export default function TransferPage({ params }: { params: { id: string } }) {
           </CardTitle>
           <CardDescription>
             Enter the new owner's wallet address to transfer this device. This
-            action is irreversible.
+            action is irreversible and will be recorded on the blockchain.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={dispatch} className="space-y-6">
-            <input type="hidden" name="deviceId" value={params.id} />
-            <input type="hidden" name="currentOwner" value={account || ''} />
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="deviceId">Device Serial Number</Label>
               <Input
@@ -70,10 +101,12 @@ export default function TransferPage({ params }: { params: { id: string } }) {
                 name="newOwner"
                 placeholder="e.g., 0xNewOwner..."
                 required
+                disabled={isLoading}
               />
             </div>
-            <Button type="submit" className="w-full" variant="default" disabled={!account}>
-              Initiate Transfer
+            <Button type="submit" className="w-full" variant="default" disabled={!account || isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isLoading ? 'Submitting...' : 'Initiate Transfer'}
             </Button>
           </form>
         </CardContent>
