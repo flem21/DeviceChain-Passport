@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "smartphone",
+      "description": "A modern smartphone",
+      "imageUrl": "https://images.unsplash.com/photo-1603184017968-953f59cd2e37?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzbWFydHBob25lfGVufDB8fHx8MTc1OTM5MDQ2MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "smartphone"
+    },
+    {
+      "id": "laptop",
+      "description": "A sleek laptop",
+      "imageUrl": "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxsYXB0b3B8ZW58MHx8fHwxNzU5MzU3NjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "laptop"
+    },
+    {
+      "id": "tablet",
+      "description": "A tablet device",
+      "imageUrl": "https://images.unsplash.com/photo-1628866971123-6697eb767771?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHx0YWJsZXQlMjBkZXZpY2V8ZW58MHx8fHwxNzU5MzQ3NDExfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "tablet device"
+    },
+    {
+      "id": "smartwatch",
+      "description": "A modern smartwatch",
+      "imageUrl": "https://images.unsplash.com/photo-1523395243481-163f8f6155ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxzbWFydHdhdGNofGVufDB8fHx8MTc1OTM0NjM5M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "smartwatch"
+    }
+  ]
 }
