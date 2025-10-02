@@ -18,7 +18,7 @@ export async function searchDevice(formData: FormData) {
   }
 }
 
-export async function registerDevice(formData: FormData) {
+export async function registerDevice(prevState: { error: string }, formData: FormData) {
   const serialNumber = formData.get('serialNumber') as string;
   const manufacturer = formData.get('manufacturer') as string;
   const model = formData.get('model') as string;

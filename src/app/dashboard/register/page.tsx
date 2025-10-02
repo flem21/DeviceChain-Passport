@@ -73,7 +73,7 @@ export default function RegisterDevicePage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="manufacturingDate">Manufacturing Date</Label>''
+              <Label htmlFor="manufacturingDate">Manufacturing Date</Label>
               <Input id="manufacturingDate" name="manufacturingDate" type="date" required />
             </div>
             <Button type="submit" className="w-full" variant="default">
